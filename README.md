@@ -31,8 +31,7 @@ the script uses some commands that must be present in system: "zenity", "python3
 i've not found any significant bugs atm, just if clipboard contain an alphanumeric string of 32 or 64 chars that's not an hash, it compare anyway whith the file and it return error ofcourse.
 
 Install:
-copiary the file in folder "~/.local/share/nautilus/scripts/"
-
+copy the file in folder "~/.local/share/nautilus/scripts/"
 make it executable with "chmod +x ~/.local/share/nautilus/scripts/SHAMD"
 
 
