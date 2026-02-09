@@ -1,0 +1,143 @@
+#!/bin/bash
+
+# --- Funzione per leggere clipboard (funziona su Wayland grazie a tkinter + sincronizzazione GNOME) ---
+read_clipboard() {
+    python3 -c "import tkinter as tk; r = tk.Tk(); r.withdraw(); print(r.clipboard_get()); r.destroy()" 2>/dev/null | tr -d '\n\r\t '
+}
+
+# --- Lingua, English default ---
+ERR="Error"
+ERR1="Select only one single file"
+ERR2="No file selected"
+FIL="Select a file"
+HAS="Calculating HASHes..."
+HAS2="It may take a while depending on file size.\nWait please..."
+CAN="Cancel"
+RFH="Reference HASH:"
+case ${LANG:0:2} in
+    # Add or modify language here
+    it)
+        ERR="Errore"
+        ERR1="Selezionare un singolo file"
+        ERR2="Nessun file selezionato"
+        FIL="Selezionare un file"
+        HAS="Calcolo degli HASH in corso"
+        HAS2="Può richiedere tempo in base alla dimensione del file.\nAttendere prego..." # BEWARE of required "\n"
+        CAN="Annulla"
+        RFH="HASH di riferimento:"
+        ;;
+esac
+
+# --- Nome e dimensione degli elementi selezionati ---
+SELECTED_COUNT=$(echo "$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS" | grep -v '^$' | wc -l)
+
+if [ "$SELECTED_COUNT" -eq 1 ]; then
+    ITEM_PATH=$(echo "$NAUTILUS_SCRIPT_SELECTED_FILE_PATHS" | head -n1)
+    ITEM_NAME=$(basename "$ITEM_PATH")
+
+    # --- Verifica se è un file (non cartella) ---
+    if [ ! -f "$ITEM_PATH" ]; then
+        zenity --error --title="$ERR" --text="$FIL" 
+        exit 1
+    fi
+
+    # --- Leggi e analizza clipboard ---
+    CLIPBOARD_CONTENT=$(read_clipboard)
+    CALC_MD5=0
+    CALC_SHA256=0
+    REF_HASH=""
+    REF_TYPE=""
+    ICON="dialog-info"  # default
+
+    # Normalizza clipboard (rimuovi spazi e converti in lowercase per confronto)
+    if [ -n "$CLIPBOARD_CONTENT" ]; then
+        # Validazione MD5: 32 caratteri esadecimali
+        if [[ "$CLIPBOARD_CONTENT" =~ ^[0-9a-fA-F]{32}$ ]]; then
+            CALC_MD5=1
+            REF_HASH="${CLIPBOARD_CONTENT,,}"  # lowercase
+            REF_TYPE="MD5"
+        # Validazione SHA256: 64 caratteri esadecimali
+        elif [[ "$CLIPBOARD_CONTENT" =~ ^[0-9a-fA-F]{64}$ ]]; then
+            CALC_SHA256=1
+            REF_HASH="${CLIPBOARD_CONTENT,,}"  # lowercase
+            REF_TYPE="SHA256"
+        fi
+    fi
+
+    # Se clipboard vuota/non valida → calcola entrambi
+    if [ -z "$REF_TYPE" ]; then
+        CALC_MD5=1
+        CALC_SHA256=1
+    fi
+
+    # --- Calcolo hash con indicatore "in corso" ---
+    zenity --info --icon=document-open-recent --title="$HAS" --text="$HAS2" --ok-label="$CAN" & ZENITY_PID=$!
+
+    # Calcola hash richiesti (con possibilità di annullamento)
+    if [ $CALC_MD5 -eq 1 ]; then
+        MD5_HASH=$(md5sum "$ITEM_PATH" 2>/dev/null | cut -d' ' -f1)
+        MD5_HASH="${MD5_HASH,,}"  # lowercase per confronto
+    fi
+
+    if [ $CALC_SHA256 -eq 1 ]; then
+        SHA256_HASH=$(sha256sum "$ITEM_PATH" 2>/dev/null | cut -d' ' -f1)
+        SHA256_HASH="${SHA256_HASH,,}"  # lowercase per confronto
+    fi
+
+    # Verifica se l'utente ha annullato
+    if ! kill -0 $ZENITY_PID 2>/dev/null; then
+        exit 0
+    fi
+    kill $ZENITY_PID 2>/dev/null
+    wait $ZENITY_PID 2>/dev/null
+
+    # --- Prepara output con confronto visivo ---
+    # Mostra hash di riferimento dalla clipboard (se presente)
+    if [ -n "$REF_HASH" ]; then
+        OUTPUT="\n<b>$RFH</b>\n$REF_HASH\n\n"
+    else
+        OUTPUT="\n"
+    fi
+
+    # Aggiungi risultati calcolati con pallini colorati
+    if [ $CALC_MD5 -eq 1 ]; then
+        OUTPUT+="<b>MD5:</b>\n"
+        if [ -n "$REF_HASH" ] && [ "$REF_TYPE" = "MD5" ]; then
+            if [ "$MD5_HASH" = "$REF_HASH" ]; then
+                OUTPUT+="$MD5_HASH\n"
+                ICON="emblem-default"
+            else
+                OUTPUT+="$MD5_HASH\n"
+                ICON="dialog-error"
+            fi
+        else
+            OUTPUT+="$MD5_HASH\n\n"
+        fi
+    fi
+
+    if [ $CALC_SHA256 -eq 1 ]; then
+        OUTPUT+="<b>SHA256:</b>\n"
+        if [ -n "$REF_HASH" ] && [ "$REF_TYPE" = "SHA256" ]; then
+            if [ "$SHA256_HASH" = "$REF_HASH" ]; then
+                OUTPUT+="$SHA256_HASH\n"
+                ICON="emblem-default"
+            else
+                OUTPUT+="$SHA256_HASH\n"
+                ICON="dialog-error"
+            fi
+        else
+            OUTPUT+="$SHA256_HASH\n"
+        fi
+    fi
+
+    # --- Mostra risultato finale ---
+    zenity --info \
+        --title="SHAMD: $ITEM_NAME" \
+        --icon=$ICON \
+        --text="<span font='monospace 12'>$OUTPUT</span>" \
+        --ok-label="OK"
+
+else
+    zenity --error --title="$ERR" --text="$ERR1"
+    exit 1
+fi
