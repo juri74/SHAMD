@@ -1,6 +1,6 @@
 # SHAMD
 *** ENGLISH FOLLOW ***
-
+*** Italiano:
 SHAMD e' uno script BASH Nautilus per Zorin OS, serve a visualizzare/confrontare hash MD5 e SHA256 del file selezionato
 in caso sia presente nella clipboard un codice SHA256 o MD5 verra automaticamente confrontato con quello del file selezionato
 file di grosse dimensioni richiedono molto tempo.
@@ -15,7 +15,7 @@ Uso:
 lo script sara' immediatamente disponibile, selezionare un file con il tasto destro, selezionare la voce di menu "scripts" ed infine selezionare SHAMD
 
 
-* English
+*** English:
 SHAMD is a Nautilus BASH script for Zorin OS to retrieve/compare SHA256 and MD5 hashes of selected file
 if an hash SHA256 or MD5 is present in clipboard it automatically compare it with the selected file and show the result.
 big file size require lot of time
