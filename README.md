@@ -7,7 +7,7 @@ SHAMD è uno script BASH Nautilus per Zorin OS, serve a visualizzare/confrontare
 in caso sia presente nella clipboard un codice MD5, SHA1 o SHA256 verrà automaticamente confrontato con quello del file selezionato.
 File di grosse dimensioni richiedono molto tempo.
 
-Lo script usa i seguenti comandi che devono essere presenti nel sistema: "zenity", "md5sum" ,"sha1sum" e "sha256sum", "python3". Tutti i comandi dovrebbero essere già presenti in Zorin OS.
+Lo script usa i seguenti comandi che devono essere presenti nel sistema: "zenity", "md5sum" ,"sha1sum", "sha256sum", "python3". Tutti i comandi dovrebbero essere già presenti in Zorin OS.
 Al momento non ho trovato bug significativi, apparte il fatto che se la clipboard contiene una stringa alfanumerica di 32, 40 o 64 caratteri che non sia un hash fa comunque il confronto ed ovviamente restrituisce errore.
 
 Installazione:
@@ -20,7 +20,7 @@ Uso:
 
 lo script sara' immediatamente disponibile, selezionare un file con il tasto destro, selezionare la voce di menu "scripts" ed infine selezionare SHAMD
 
-v1.0 Versione iniziale
+v1.0 Versione iniziale\n
 v1.1 Aggiunto calcolo/controllo HASH SHA1
 
 *** English:
