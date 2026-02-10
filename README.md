@@ -20,7 +20,7 @@ Uso:
 
 lo script sara' immediatamente disponibile, selezionare un file con il tasto destro, selezionare la voce di menu "scripts" ed infine selezionare SHAMD
 
-v1.0 Versione iniziale\n
+v1.0 Versione iniziale<br>
 v1.1 Aggiunto calcolo/controllo HASH SHA1
 
 *** English:
